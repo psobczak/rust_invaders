@@ -32,6 +32,11 @@ pub enum GameState {
 #[derive(Component)]
 pub struct AnimationTimer(Timer);
 
+pub struct AnimationIndices {
+    start: usize,
+    end: usize,
+}
+
 #[derive(AssetCollection, Resource)]
 pub struct MyAssets {
     #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 1, rows = 2,))]

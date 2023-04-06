@@ -2,7 +2,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::GameState;
 
-const PLAYER_SPEED: f32 = 50.0;
+const PLAYER_SPEED: f32 = 100.0;
 const BOTTOM_OFFSET: f32 = 30.0;
 
 #[derive(Component)]
@@ -51,10 +51,3 @@ fn move_player(
         transform.translation.x += PLAYER_SPEED * time.delta_seconds();
     }
 }
-
-// fn restrict_player_movement(mut player: Query<&mut Transform, With<Player>>, window: Query<&Window, With<PrimaryWindow>>) {
-//     let mut transform = player.single_mut();
-//     let window = window.single();
-//
-//     if transform.translation.x <
-//  }

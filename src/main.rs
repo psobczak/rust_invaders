@@ -5,6 +5,7 @@ use bevy::{
 };
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
 use rust_invaders::{
     GameState, Grid, Invader, InvaderPlugin, MyAssets, Player, PlayerPlugin, CELL_SIZE,
 };
@@ -19,7 +20,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Rust Invaders".into(),
-                resolution: WindowResolution::new(384.0, 600.0),
+                resolution: WindowResolution::new(480.0, 600.0),
                 ..Default::default()
             }),
             ..Default::default()
