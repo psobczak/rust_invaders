@@ -5,21 +5,21 @@ use bevy::{
 };
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use rust_invaders::{GameState, Grid, InvaderPlugin, MyAssets, PlayerPlugin};
-
-const CELL_SIZE: f32 = 20.0;
+use rust_invaders::{
+    GameState, Grid, Invader, InvaderPlugin, MyAssets, Player, PlayerPlugin, CELL_SIZE,
+};
 
 fn main() {
     App::new()
         .add_state::<GameState>()
         .add_loading_state(
-            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Next),
+            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Spawning),
         )
         .add_collection_to_loading_state::<_, MyAssets>(GameState::AssetLoading)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Rust Invaders".into(),
-                resolution: WindowResolution::new(400.0, 600.0),
+                resolution: WindowResolution::new(384.0, 600.0),
                 ..Default::default()
             }),
             ..Default::default()
@@ -30,6 +30,7 @@ fn main() {
         .add_plugin(InvaderPlugin)
         .add_plugin(PlayerPlugin)
         .add_system(setup.on_startup())
+        .add_system(change_state.in_set(OnUpdate(GameState::Spawning)))
         .run();
 }
 
@@ -42,6 +43,15 @@ fn setup(mut commands: Commands, window: Query<&Window, With<PrimaryWindow>>) {
         columns: (window.width() / CELL_SIZE) as usize,
     };
 
-    println!("{:?}", grid);
     commands.insert_resource(grid);
+}
+
+fn change_state(
+    player: Query<With<Player>>,
+    invaders: Query<With<Invader>>,
+    mut state: ResMut<NextState<GameState>>,
+) {
+    if player.iter().len() == 1 && invaders.iter().len() > 0 {
+        state.set(GameState::Next)
+    }
 }

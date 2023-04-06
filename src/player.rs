@@ -12,7 +12,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(spawn_player.in_schedule(OnEnter(GameState::Next)))
+        app.add_system(spawn_player.in_schedule(OnEnter(GameState::Spawning)))
             .add_systems((move_player,).in_set(OnUpdate(GameState::Next)));
     }
 }
@@ -30,6 +30,7 @@ fn spawn_player(mut commands: Commands, window: Query<&Window, With<PrimaryWindo
             ..Default::default()
         },
         Player,
+        Name::from("Player"),
     ));
 }
 
