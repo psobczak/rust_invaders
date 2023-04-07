@@ -151,7 +151,6 @@ fn change_moving_direction(
 fn move_invaders(
     mut invaders: Query<(&mut GridPosition, &mut MoveTimer, &Direction)>,
     time: Res<Time>,
-    grid: Res<Grid>,
 ) {
     for (mut grid_position, mut move_timer, direction) in &mut invaders {
         move_timer.0.tick(time.delta());
