@@ -14,6 +14,7 @@ use rust_invaders::{
 fn main() {
     App::new()
         .add_state::<GameState>()
+        .insert_resource(ClearColor(Color::BLACK))
         .add_loading_state(
             LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Spawning),
         )

@@ -14,6 +14,16 @@ enum InvaderState {
     Dying,
 }
 
+#[derive(Component, Default)]
+enum Direction {
+    #[default]
+    Left,
+    Right,
+}
+
+#[derive(Component)]
+struct MoveTimer(Timer);
+
 impl InvaderState {
     fn get_animation_indices(&self) -> AnimationIndices {
         match self {
@@ -26,12 +36,16 @@ impl InvaderState {
 impl Plugin for InvaderPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<GridPosition>()
+            .add_event::<Direction>()
             .add_system((spawn_invaders).in_schedule(OnEnter(GameState::Spawning)))
             .add_systems(
                 (
                     position_invaders_on_grid,
                     animate_invaders,
                     change_grid_position,
+                    move_invaders,
+                    detect_edge,
+                    change_moving_direction,
                 )
                     .in_set(OnUpdate(GameState::Next)),
             );
@@ -58,6 +72,8 @@ fn spawn_invaders(mut commands: Commands, grid: Res<Grid>, assets: Res<MyAssets>
                         AnimationTimer(Timer::from_seconds(1.0, TimerMode::Repeating)),
                         Invader,
                         InvaderState::default(),
+                        Direction::default(),
+                        MoveTimer(Timer::from_seconds(1.0, TimerMode::Repeating)),
                     ));
                 }
             }
@@ -98,6 +114,53 @@ fn animate_invaders(
             } else {
                 sprite.index + 1
             };
+        }
+    }
+}
+
+fn detect_edge(
+    invaders: Query<&GridPosition, Changed<GridPosition>>,
+    grid: Res<Grid>,
+    mut writer: EventWriter<Direction>,
+) {
+    for grid_position in &invaders {
+        if grid_position.x == 0 {
+            writer.send(Direction::Left)
+        }
+
+        if grid_position.x == grid.columns - 1 {
+            writer.send(Direction::Right)
+        }
+    }
+}
+
+fn change_moving_direction(
+    mut direction: Query<&mut Direction>,
+    mut reader: EventReader<Direction>,
+) {
+    for event in reader.iter() {
+        for mut direction in &mut direction {
+            match event {
+                Direction::Left => *direction = Direction::Right,
+                Direction::Right => *direction = Direction::Left,
+            }
+        }
+    }
+}
+
+fn move_invaders(
+    mut invaders: Query<(&mut GridPosition, &mut MoveTimer, &Direction)>,
+    time: Res<Time>,
+    grid: Res<Grid>,
+) {
+    for (mut grid_position, mut move_timer, direction) in &mut invaders {
+        move_timer.0.tick(time.delta());
+
+        if move_timer.0.just_finished() {
+            match direction {
+                Direction::Left => grid_position.x -= 1,
+                Direction::Right => grid_position.x += 1,
+            }
         }
     }
 }
