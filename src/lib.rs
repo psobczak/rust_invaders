@@ -1,11 +1,13 @@
 mod invader;
 mod player;
+mod projectile;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
 pub use invader::*;
 pub use player::*;
+pub use projectile::*;
 
 pub const CELL_SIZE: f32 = 32.0;
 

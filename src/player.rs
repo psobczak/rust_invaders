@@ -6,7 +6,12 @@ const PLAYER_SPEED: f32 = 100.0;
 const BOTTOM_OFFSET: f32 = 30.0;
 
 #[derive(Component)]
-pub struct Player;
+pub struct Player {
+    pub can_shoot: bool,
+}
+
+#[derive(Component)]
+struct ShootTimer(Timer);
 
 pub struct PlayerPlugin;
 
@@ -29,8 +34,9 @@ fn spawn_player(mut commands: Commands, window: Query<&Window, With<PrimaryWindo
             transform: Transform::from_xyz(0.0, -window.height() / 2.0 + BOTTOM_OFFSET, 0.0),
             ..Default::default()
         },
-        Player,
+        Player { can_shoot: true },
         Name::from("Player"),
+        // ShootTimer(Timer::from_seconds(duration, mode))
     ));
 }
 
