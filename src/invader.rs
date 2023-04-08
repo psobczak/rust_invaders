@@ -1,11 +1,21 @@
-use bevy::{prelude::*, sprite::Anchor, window::PrimaryWindow};
+use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::{AnimationIndices, AnimationTimer, GameState, Grid, GridPosition, MyAssets, Worth};
 
 pub struct InvaderPlugin;
 
+#[derive(Resource)]
+pub struct InvaderCount(pub usize);
+
 #[derive(Component)]
 pub struct Invader;
+
+#[derive(Resource)]
+struct TimerConfig {
+    seconds: f32,
+    min_seconds: f32,
+    decrement: f32,
+}
 
 #[derive(Component, Default)]
 enum InvaderState {
@@ -29,18 +39,14 @@ enum EdgeReached {
 #[derive(Component)]
 struct MoveTimer(Timer);
 
-impl InvaderState {
-    fn get_animation_indices(&self) -> AnimationIndices {
-        match self {
-            InvaderState::Moving => AnimationIndices { start: 0, end: 1 },
-            InvaderState::Dying => todo!(),
-        }
-    }
-}
-
 impl Plugin for InvaderPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<GridPosition>()
+            .insert_resource(TimerConfig {
+                seconds: 1.0,
+                min_seconds: 0.5,
+                decrement: 0.1,
+            })
             .add_event::<EdgeReached>()
             .add_system((spawn_invaders).in_schedule(OnEnter(GameState::Spawning)))
             .add_systems(
@@ -56,33 +62,81 @@ impl Plugin for InvaderPlugin {
     }
 }
 
-fn spawn_invaders(mut commands: Commands, grid: Res<Grid>, assets: Res<MyAssets>) {
+#[derive(Bundle)]
+struct InvaderBundle {
+    grid_position: GridPosition,
+    #[bundle]
+    sprite_sheet_bundle: SpriteSheetBundle,
+    animation_timer: AnimationTimer,
+    invader: Invader,
+    state: InvaderState,
+    direction: Direction,
+    move_timer: MoveTimer,
+    worth: Worth,
+}
+
+impl InvaderBundle {
+    fn new(
+        x: usize,
+        y: usize,
+        texture_atlas: Handle<TextureAtlas>,
+        worth: usize,
+        starting_seconds: f32,
+    ) -> Self {
+        Self {
+            grid_position: GridPosition { x, y },
+            sprite_sheet_bundle: SpriteSheetBundle {
+                sprite: TextureAtlasSprite::new(0),
+                texture_atlas,
+                ..Default::default()
+            },
+            animation_timer: AnimationTimer(Timer::from_seconds(
+                starting_seconds,
+                TimerMode::Repeating,
+            )),
+            invader: Invader,
+            state: InvaderState::default(),
+            direction: Direction::default(),
+            move_timer: MoveTimer(Timer::from_seconds(starting_seconds, TimerMode::Repeating)),
+            worth: Worth(worth),
+        }
+    }
+}
+
+impl InvaderState {
+    fn get_animation_indices(&self) -> AnimationIndices {
+        match self {
+            InvaderState::Moving => AnimationIndices { start: 0, end: 1 },
+            InvaderState::Dying => todo!(),
+        }
+    }
+}
+
+fn spawn_invaders(
+    mut commands: Commands,
+    grid: Res<Grid>,
+    assets: Res<MyAssets>,
+    timer_config: Res<TimerConfig>,
+) {
+    let mut invader_count = InvaderCount(0);
     commands
         .spawn((Name::from("Invaders"), SpatialBundle::default()))
         .with_children(|children| {
             for column in 2..grid.columns - 2 {
-                for row in 1..8 {
-                    children.spawn((
-                        GridPosition { x: column, y: row },
-                        SpriteSheetBundle {
-                            sprite: TextureAtlasSprite {
-                                index: 0,
-                                anchor: Anchor::Center,
-                                ..Default::default()
-                            },
-                            texture_atlas: assets.invaders.clone(),
-                            ..Default::default()
-                        },
-                        AnimationTimer(Timer::from_seconds(1.0, TimerMode::Repeating)),
-                        Invader,
-                        InvaderState::default(),
-                        Direction::default(),
-                        MoveTimer(Timer::from_seconds(1.0, TimerMode::Repeating)),
-                        Worth(100),
+                for row in 2..8 {
+                    children.spawn(InvaderBundle::new(
+                        column,
+                        row,
+                        assets.invaders.clone(),
+                        100,
+                        timer_config.seconds,
                     ));
+                    invader_count.0 += 1;
                 }
             }
         });
+
+    commands.insert_resource(invader_count);
 }
 
 fn position_invaders_on_grid(
@@ -163,9 +217,7 @@ fn move_invaders(
         if move_timer.0.just_finished() {
             match direction {
                 Direction::Left => grid_position.x -= 1,
-                Direction::Right => {
-                    grid_position.x += 1;
-                }
+                Direction::Right => grid_position.x += 1,
             }
         }
     }
