@@ -1,8 +1,15 @@
 use bevy::{prelude::*, sprite::collide_aabb, window::PrimaryWindow};
 
-use crate::{GameState, Invader, Player};
+use crate::{
+    components::{Player, Worth},
+    invader::Invader,
+    score::ScoreIncreased,
+    Cell, GameState,
+};
 
 const PROJECTILE_SPPED: f32 = 200.0;
+const PROJECTILE_SIZE: Vec2 = Vec2::new(2.0, 10.0);
+const PROJECTILE_OFFSET: f32 = 30.0;
 
 pub struct ProjectilePlugin;
 
@@ -43,12 +50,12 @@ fn spawn_projectile(
             SpriteBundle {
                 sprite: Sprite {
                     color: Color::WHITE,
-                    custom_size: Some(Vec2::new(2.0, 10.0)),
+                    custom_size: Some(PROJECTILE_SIZE),
                     ..Default::default()
                 },
                 transform: Transform::from_xyz(
                     player_translation.x,
-                    player_translation.y + 30.0,
+                    player_translation.y + PROJECTILE_OFFSET,
                     0.0,
                 ),
                 ..Default::default()
@@ -79,23 +86,26 @@ fn despawn_projectiles(
 
 fn hit_invader(
     projectiles: Query<(&GlobalTransform, Entity), With<Projectile>>,
-    invaders: Query<(&GlobalTransform, Entity), With<Invader>>,
+    invaders: Query<(&GlobalTransform, Entity, &Worth), With<Invader>>,
+    mut score_writer: EventWriter<ScoreIncreased>,
     mut writer: EventWriter<HitDetected>,
 ) {
     for (projectile_transform, projectile) in &projectiles {
-        for (invader_transform, invader) in &invaders {
+        for (invader_transform, invader, worth) in &invaders {
             if collide_aabb::collide(
                 projectile_transform.translation(),
-                Vec2::new(2.0, 10.0),
+                PROJECTILE_SIZE,
                 invader_transform.translation(),
-                Vec2::new(32.0, 32.0),
+                Vec2::new(Cell::SIZE, Cell::SIZE),
             )
             .is_some()
             {
                 writer.send(HitDetected {
                     invader,
                     projectile,
-                })
+                });
+
+                score_writer.send(ScoreIncreased(worth.0))
             }
         }
     }

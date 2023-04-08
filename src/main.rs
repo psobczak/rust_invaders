@@ -5,9 +5,11 @@ use bevy::{
 };
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-
 use rust_invaders::{
-    Cell, GameState, Grid, Invader, InvaderPlugin, MyAssets, Player, PlayerPlugin, ProjectilePlugin,
+    components::{Invader, Player},
+    plugins::{InvaderPlugin, PlayerPlugin, ProjectilePlugin, ScorePlugin},
+    resources::Grid,
+    Cell, GameState, MyAssets,
 };
 
 fn main() {
@@ -32,6 +34,7 @@ fn main() {
         .add_plugin(InvaderPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(ProjectilePlugin)
+        .add_plugin(ScorePlugin)
         .add_system(setup.on_startup())
         .add_system(change_state.in_set(OnUpdate(GameState::Spawning)))
         .run();

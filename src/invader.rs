@@ -1,6 +1,6 @@
 use bevy::{prelude::*, sprite::Anchor, window::PrimaryWindow};
 
-use crate::{AnimationIndices, AnimationTimer, GameState, Grid, GridPosition, MyAssets};
+use crate::{AnimationIndices, AnimationTimer, GameState, Grid, GridPosition, MyAssets, Worth};
 
 pub struct InvaderPlugin;
 
@@ -47,7 +47,6 @@ impl Plugin for InvaderPlugin {
                 (
                     position_invaders_on_grid,
                     animate_invaders,
-                    change_grid_position,
                     move_invaders,
                     detect_edge,
                     change_moving_direction,
@@ -79,6 +78,7 @@ fn spawn_invaders(mut commands: Commands, grid: Res<Grid>, assets: Res<MyAssets>
                         InvaderState::default(),
                         Direction::default(),
                         MoveTimer(Timer::from_seconds(1.0, TimerMode::Repeating)),
+                        Worth(100),
                     ));
                 }
             }
@@ -167,29 +167,6 @@ fn move_invaders(
                     grid_position.x += 1;
                 }
             }
-        }
-    }
-}
-
-fn change_grid_position(
-    keyboard: Res<Input<KeyCode>>,
-    mut grid_position: Query<&mut GridPosition>,
-) {
-    for mut position in &mut grid_position {
-        if keyboard.just_pressed(KeyCode::Left) {
-            position.x -= 1;
-        }
-
-        if keyboard.just_pressed(KeyCode::Right) {
-            position.x += 1;
-        }
-
-        if keyboard.just_pressed(KeyCode::Down) {
-            position.y += 1;
-        }
-
-        if keyboard.just_pressed(KeyCode::Up) {
-            position.y -= 1;
         }
     }
 }
