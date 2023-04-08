@@ -21,6 +21,11 @@ enum Direction {
     Right,
 }
 
+enum EdgeReached {
+    Left,
+    Right,
+}
+
 #[derive(Component)]
 struct MoveTimer(Timer);
 
@@ -36,7 +41,7 @@ impl InvaderState {
 impl Plugin for InvaderPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<GridPosition>()
-            .add_event::<Direction>()
+            .add_event::<EdgeReached>()
             .add_system((spawn_invaders).in_schedule(OnEnter(GameState::Spawning)))
             .add_systems(
                 (
@@ -63,7 +68,7 @@ fn spawn_invaders(mut commands: Commands, grid: Res<Grid>, assets: Res<MyAssets>
                         SpriteSheetBundle {
                             sprite: TextureAtlasSprite {
                                 index: 0,
-                                anchor: Anchor::TopLeft,
+                                anchor: Anchor::Center,
                                 ..Default::default()
                             },
                             texture_atlas: assets.invaders.clone(),
@@ -121,28 +126,28 @@ fn animate_invaders(
 fn detect_edge(
     invaders: Query<&GridPosition, Changed<GridPosition>>,
     grid: Res<Grid>,
-    mut writer: EventWriter<Direction>,
+    mut writer: EventWriter<EdgeReached>,
 ) {
     for grid_position in &invaders {
         if grid_position.x == 0 {
-            writer.send(Direction::Left)
+            writer.send(EdgeReached::Left)
         }
 
         if grid_position.x == grid.columns - 1 {
-            writer.send(Direction::Right)
+            writer.send(EdgeReached::Right)
         }
     }
 }
 
 fn change_moving_direction(
     mut direction: Query<&mut Direction>,
-    mut reader: EventReader<Direction>,
+    mut reader: EventReader<EdgeReached>,
 ) {
     for event in reader.iter() {
         for mut direction in &mut direction {
             match event {
-                Direction::Left => *direction = Direction::Right,
-                Direction::Right => *direction = Direction::Left,
+                EdgeReached::Left => *direction = Direction::Right,
+                EdgeReached::Right => *direction = Direction::Left,
             }
         }
     }
@@ -158,7 +163,9 @@ fn move_invaders(
         if move_timer.0.just_finished() {
             match direction {
                 Direction::Left => grid_position.x -= 1,
-                Direction::Right => grid_position.x += 1,
+                Direction::Right => {
+                    grid_position.x += 1;
+                }
             }
         }
     }
