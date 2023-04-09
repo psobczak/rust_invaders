@@ -1,33 +1,17 @@
 mod grid;
-mod invader;
 mod player;
 mod projectile;
 mod score;
+mod units;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
 pub use grid::*;
-use score::*;
-
-pub mod plugins {
-    pub use super::invader::InvaderPlugin;
-    pub use super::player::PlayerPlugin;
-    pub use super::projectile::ProjectilePlugin;
-    pub use super::score::ScorePlugin;
-}
-
-pub mod components {
-    pub use super::grid::GridPosition;
-    pub use super::invader::Invader;
-    pub use super::player::Player;
-    pub use super::score::Worth;
-}
-
-pub mod resources {
-    pub use super::grid::Grid;
-    pub use super::score::Score;
-}
+pub use player::*;
+pub use projectile::*;
+pub use score::*;
+pub use units::*;
 
 #[derive(Component)]
 pub struct AnimationTimer(Timer);

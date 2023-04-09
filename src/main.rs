@@ -6,10 +6,8 @@ use bevy::{
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use rust_invaders::{
-    components::{Invader, Player},
-    plugins::{InvaderPlugin, PlayerPlugin, ProjectilePlugin, ScorePlugin},
-    resources::Grid,
-    Cell, GameState, MyAssets,
+    Cell, GameState, Grid, Invader, MyAssets, Player, PlayerPlugin, ProjectilePlugin, ScorePlugin,
+    UnitPlugin,
 };
 
 fn main() {
@@ -31,7 +29,7 @@ fn main() {
         .add_plugin(
             WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Slash)),
         )
-        .add_plugin(InvaderPlugin)
+        .add_plugin(UnitPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(ProjectilePlugin)
         .add_plugin(ScorePlugin)
@@ -45,8 +43,8 @@ fn setup(mut commands: Commands, window: Query<&Window, With<PrimaryWindow>>) {
 
     let window = window.single();
     let grid = Grid {
-        rows: (window.height() / Cell::SIZE) as usize,
-        columns: (window.width() / Cell::SIZE) as usize,
+        rows: (window.height() / Cell::SIZE) as isize,
+        columns: (window.width() / Cell::SIZE) as isize,
     };
 
     commands.insert_resource(grid);

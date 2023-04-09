@@ -12,14 +12,14 @@ impl Cell {
 
 #[derive(Resource, Debug)]
 pub struct Grid {
-    pub rows: usize,
-    pub columns: usize,
+    pub rows: isize,
+    pub columns: isize,
 }
 
 #[derive(Reflect, Resource, Default, Component, Debug)]
 pub struct GridPosition {
-    pub x: usize,
-    pub y: usize,
+    pub x: isize,
+    pub y: isize,
 }
 
 impl GridPosition {

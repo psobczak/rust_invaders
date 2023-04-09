@@ -1,11 +1,6 @@
 use bevy::{prelude::*, sprite::collide_aabb, window::PrimaryWindow};
 
-use crate::{
-    components::{Player, Worth},
-    invader::Invader,
-    score::ScoreIncreased,
-    Cell, GameState,
-};
+use crate::{Cell, GameState, Invader, Player, ScoreIncreased, Worth};
 
 const PROJECTILE_SPPED: f32 = 200.0;
 const PROJECTILE_SIZE: Vec2 = Vec2::new(2.0, 10.0);

@@ -1,14 +1,10 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
-use crate::{AnimationIndices, AnimationTimer, GameState, Grid, GridPosition, MyAssets, Worth};
+use crate::{AnimationIndices, AnimationTimer, GameState, Grid, GridPosition, Invader, MyAssets, Unit};
 
-pub struct InvaderPlugin;
+use super::{InvaderCount, MoveTimer, UnitBundle};
 
-#[derive(Resource)]
-pub struct InvaderCount(pub usize);
-
-#[derive(Component)]
-pub struct Invader;
+use super::Direction;
 
 #[derive(Resource)]
 struct TimerConfig {
@@ -17,6 +13,8 @@ struct TimerConfig {
     decrement: f32,
 }
 
+pub struct InvaderPlugin;
+
 #[derive(Component, Default)]
 enum InvaderState {
     #[default]
@@ -24,11 +22,13 @@ enum InvaderState {
     Dying,
 }
 
-#[derive(Component, Default)]
-enum Direction {
-    #[default]
-    Left,
-    Right,
+impl InvaderState {
+    fn get_animation_indices(&self) -> AnimationIndices {
+        match self {
+            InvaderState::Moving => AnimationIndices { start: 0, end: 1 },
+            InvaderState::Dying => todo!(),
+        }
+    }
 }
 
 enum EdgeReached {
@@ -36,18 +36,14 @@ enum EdgeReached {
     Right,
 }
 
-#[derive(Component)]
-struct MoveTimer(Timer);
-
 impl Plugin for InvaderPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<GridPosition>()
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_event::<EdgeReached>()
             .insert_resource(TimerConfig {
                 seconds: 1.0,
                 min_seconds: 0.5,
                 decrement: 0.1,
             })
-            .add_event::<EdgeReached>()
             .add_system((spawn_invaders).in_schedule(OnEnter(GameState::Spawning)))
             .add_systems(
                 (
@@ -59,56 +55,6 @@ impl Plugin for InvaderPlugin {
                 )
                     .in_set(OnUpdate(GameState::Next)),
             );
-    }
-}
-
-#[derive(Bundle)]
-struct InvaderBundle {
-    grid_position: GridPosition,
-    #[bundle]
-    sprite_sheet_bundle: SpriteSheetBundle,
-    animation_timer: AnimationTimer,
-    invader: Invader,
-    state: InvaderState,
-    direction: Direction,
-    move_timer: MoveTimer,
-    worth: Worth,
-}
-
-impl InvaderBundle {
-    fn new(
-        x: usize,
-        y: usize,
-        texture_atlas: Handle<TextureAtlas>,
-        worth: usize,
-        starting_seconds: f32,
-    ) -> Self {
-        Self {
-            grid_position: GridPosition { x, y },
-            sprite_sheet_bundle: SpriteSheetBundle {
-                sprite: TextureAtlasSprite::new(0),
-                texture_atlas,
-                ..Default::default()
-            },
-            animation_timer: AnimationTimer(Timer::from_seconds(
-                starting_seconds,
-                TimerMode::Repeating,
-            )),
-            invader: Invader,
-            state: InvaderState::default(),
-            direction: Direction::default(),
-            move_timer: MoveTimer(Timer::from_seconds(starting_seconds, TimerMode::Repeating)),
-            worth: Worth(worth),
-        }
-    }
-}
-
-impl InvaderState {
-    fn get_animation_indices(&self) -> AnimationIndices {
-        match self {
-            InvaderState::Moving => AnimationIndices { start: 0, end: 1 },
-            InvaderState::Dying => todo!(),
-        }
     }
 }
 
@@ -124,12 +70,16 @@ fn spawn_invaders(
         .with_children(|children| {
             for column in 2..grid.columns - 2 {
                 for row in 2..8 {
-                    children.spawn(InvaderBundle::new(
-                        column,
-                        row,
-                        assets.invaders.clone(),
-                        100,
-                        timer_config.seconds,
+                    children.spawn((
+                        UnitBundle::new(
+                            column,
+                            row,
+                            assets.invaders.clone(),
+                            100,
+                            timer_config.seconds,
+                        ),
+                        Invader,
+                        InvaderState::default(),
                     ));
                     invader_count.0 += 1;
                 }
@@ -144,7 +94,7 @@ fn position_invaders_on_grid(
         &mut Transform,
         &GridPosition,
         Changed<GridPosition>,
-        With<Invader>,
+        With<Unit>,
     )>,
     window: Query<&Window, With<PrimaryWindow>>,
 ) {
@@ -159,7 +109,7 @@ fn position_invaders_on_grid(
 fn animate_invaders(
     mut invaders: Query<
         (&mut AnimationTimer, &mut TextureAtlasSprite, &InvaderState),
-        With<Invader>,
+        With<Unit>,
     >,
     time: Res<Time>,
 ) {
@@ -178,11 +128,11 @@ fn animate_invaders(
 }
 
 fn detect_edge(
-    invaders: Query<&GridPosition, Changed<GridPosition>>,
+    invaders: Query<(&GridPosition, Changed<GridPosition>, With<Invader>)>,
     grid: Res<Grid>,
     mut writer: EventWriter<EdgeReached>,
 ) {
-    for grid_position in &invaders {
+    for (grid_position, _, _) in &invaders {
         if grid_position.x == 0 {
             writer.send(EdgeReached::Left)
         }
@@ -194,7 +144,7 @@ fn detect_edge(
 }
 
 fn change_moving_direction(
-    mut direction: Query<&mut Direction>,
+    mut direction: Query<&mut Direction, With<Invader>>,
     mut reader: EventReader<EdgeReached>,
 ) {
     for event in reader.iter() {
