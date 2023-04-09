@@ -6,8 +6,8 @@ use bevy::{
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use rust_invaders::{
-    Cell, GameState, Grid, Invader, MyAssets, Player, PlayerPlugin, ProjectilePlugin, ScorePlugin,
-    UnitPlugin,
+    Cell, GameState, Grid, Invader, InvaderPlugin, MyAssets, Player, PlayerPlugin,
+    ProjectilePlugin, ScorePlugin, SpaceshipPlugin,
 };
 
 fn main() {
@@ -29,7 +29,8 @@ fn main() {
         .add_plugin(
             WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Slash)),
         )
-        .add_plugin(UnitPlugin)
+        .add_plugin(InvaderPlugin)
+        .add_plugin(SpaceshipPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(ProjectilePlugin)
         .add_plugin(ScorePlugin)

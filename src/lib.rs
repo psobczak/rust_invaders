@@ -1,17 +1,19 @@
 mod grid;
+mod invader;
 mod player;
 mod projectile;
 mod score;
-mod units;
+mod spaceship;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
 pub use grid::*;
+pub use invader::*;
 pub use player::*;
 pub use projectile::*;
 pub use score::*;
-pub use units::*;
+pub use spaceship::*;
 
 #[derive(Component)]
 pub struct AnimationTimer(Timer);
@@ -34,4 +36,10 @@ pub enum GameState {
     AssetLoading,
     Spawning,
     Next,
+}
+
+fn despawn_entities<C: Component>(mut commands: Commands, entities: Query<Entity, With<C>>) {
+    for entity in &entities {
+        commands.entity(entity).despawn_recursive();
+    }
 }

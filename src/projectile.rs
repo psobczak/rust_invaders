@@ -2,7 +2,7 @@ use bevy::{prelude::*, sprite::collide_aabb, window::PrimaryWindow};
 
 use crate::{Cell, GameState, Invader, Player, ScoreIncreased, Worth};
 
-const PROJECTILE_SPPED: f32 = 200.0;
+const PROJECTILE_SPPED: f32 = 300.0;
 const PROJECTILE_SIZE: Vec2 = Vec2::new(2.0, 10.0);
 const PROJECTILE_OFFSET: f32 = 30.0;
 
