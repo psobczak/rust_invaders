@@ -1,4 +1,8 @@
-use bevy::{prelude::*, sprite::collide_aabb, window::PrimaryWindow};
+use bevy::{
+    prelude::*,
+    sprite::collide_aabb::{self, Collision},
+    window::PrimaryWindow,
+};
 
 use crate::{Cell, GameState, Invader, Player, ScoreIncreased, Worth};
 
@@ -11,7 +15,7 @@ pub struct ProjectilePlugin;
 #[derive(Component)]
 struct Projectile;
 
-struct HitDetected {
+pub struct HitDetected {
     invader: Entity,
     projectile: Entity,
 }
@@ -87,14 +91,12 @@ fn hit_invader(
 ) {
     for (projectile_transform, projectile) in &projectiles {
         for (invader_transform, invader, worth) in &invaders {
-            if collide_aabb::collide(
+            if let Some(Collision::Bottom) = collide_aabb::collide(
                 projectile_transform.translation(),
                 PROJECTILE_SIZE,
                 invader_transform.translation(),
                 Vec2::new(Cell::SIZE, Cell::SIZE),
-            )
-            .is_some()
-            {
+            ) {
                 writer.send(HitDetected {
                     invader,
                     projectile,

@@ -36,6 +36,8 @@ pub enum GameState {
     AssetLoading,
     Spawning,
     Next,
+    PlayerWon,
+    GameOver,
 }
 
 fn despawn_entities<C: Component>(mut commands: Commands, entities: Query<Entity, With<C>>) {

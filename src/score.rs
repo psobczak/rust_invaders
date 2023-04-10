@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::{GameState, InvaderCount};
+
 pub struct ScorePlugin;
 
 #[derive(Component)]
@@ -15,7 +17,13 @@ impl Plugin for ScorePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<ScoreIncreased>()
             .insert_resource(Score::default())
-            .add_system(increase_sscore.run_if(on_event::<ScoreIncreased>()));
+            .add_systems(
+                (
+                    increase_sscore.run_if(on_event::<ScoreIncreased>()),
+                    player_win.run_if(resource_exists_and_equals(InvaderCount(0))),
+                )
+                    .in_set(OnUpdate(GameState::Next)),
+            );
     }
 }
 
@@ -23,4 +31,9 @@ fn increase_sscore(mut score: ResMut<Score>, mut reader: EventReader<ScoreIncrea
     for event in reader.iter() {
         **score += event.0;
     }
+}
+
+fn player_win(mut state: ResMut<NextState<GameState>>) {
+    state.set(GameState::PlayerWon);
+    println!("YOU WON!");
 }
