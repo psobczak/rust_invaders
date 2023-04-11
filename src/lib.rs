@@ -34,7 +34,6 @@ pub struct MyAssets {
 pub enum GameState {
     #[default]
     AssetLoading,
-    Spawning,
     Next,
     PlayerWon,
     GameOver,

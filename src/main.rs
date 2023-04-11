@@ -5,9 +5,10 @@ use bevy::{
 };
 use bevy_asset_loader::prelude::{LoadingState, LoadingStateAppExt};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
 use rust_invaders::{
-    Cell, GameState, Grid, Invader, InvaderPlugin, MyAssets, Player, PlayerPlugin,
-    ProjectilePlugin, ScorePlugin, SpaceshipPlugin,
+    Cell, GameState, Grid, InvaderPlugin, MyAssets, PlayerPlugin, ProjectilePlugin, ScorePlugin,
+    SpaceshipPlugin,
 };
 
 fn main() {
@@ -15,7 +16,7 @@ fn main() {
         .add_state::<GameState>()
         .insert_resource(ClearColor(Color::BLACK))
         .add_loading_state(
-            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Spawning),
+            LoadingState::new(GameState::AssetLoading).continue_to_state(GameState::Next),
         )
         .add_collection_to_loading_state::<_, MyAssets>(GameState::AssetLoading)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -35,7 +36,6 @@ fn main() {
         .add_plugin(ProjectilePlugin)
         .add_plugin(ScorePlugin)
         .add_system(setup.on_startup())
-        .add_system(change_state.in_set(OnUpdate(GameState::Spawning)))
         .run();
 }
 
@@ -49,14 +49,4 @@ fn setup(mut commands: Commands, window: Query<&Window, With<PrimaryWindow>>) {
     };
 
     commands.insert_resource(grid);
-}
-
-fn change_state(
-    player: Query<With<Player>>,
-    invaders: Query<With<Invader>>,
-    mut state: ResMut<NextState<GameState>>,
-) {
-    if player.iter().len() == 1 && invaders.iter().len() > 0 {
-        state.set(GameState::Next)
-    }
 }

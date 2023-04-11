@@ -58,7 +58,7 @@ impl Plugin for InvaderPlugin {
                 min_seconds: 0.5,
                 decrement: 0.1,
             })
-            .add_system((spawn_invaders).in_schedule(OnEnter(GameState::Spawning)))
+            .add_system((spawn_invaders).in_schedule(OnEnter(GameState::Next)))
             .add_systems(
                 (
                     position_invaders_on_grid,
@@ -78,17 +78,23 @@ fn spawn_invaders(
     grid: Res<Grid>,
     assets: Res<MyAssets>,
     timer_config: Res<TimerConfig>,
+    window: Query<&Window, With<PrimaryWindow>>,
 ) {
     let mut invader_count = InvaderCount(0);
+    let window = window.single();
     commands
         .spawn((Name::from("Invaders"), SpatialBundle::default()))
         .with_children(|children| {
             for column in 2..grid.columns - 2 {
                 for row in 2..8 {
+                    let grid_position = GridPosition { x: column, y: row };
+                    let transform =
+                        grid_position.get_transform(-window.width() / 2.0, window.height() / 2.0);
                     children.spawn((
                         SpriteSheetBundle {
                             sprite: TextureAtlasSprite::new(0),
                             texture_atlas: assets.invaders.clone(),
+                            transform,
                             ..Default::default()
                         },
                         AnimationTimer(Timer::from_seconds(
@@ -103,7 +109,7 @@ fn spawn_invaders(
                         Direction::default(),
                         InvaderState::default(),
                         Worth(100),
-                        GridPosition { x: column, y: row },
+                        grid_position,
                     ));
                     invader_count.0 += 1;
                 }

@@ -17,7 +17,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(spawn_player.in_schedule(OnEnter(GameState::Spawning)))
+        app.add_system(spawn_player.in_schedule(OnEnter(GameState::Next)))
             .add_systems((move_player,).in_set(OnUpdate(GameState::Next)));
     }
 }
@@ -36,7 +36,6 @@ fn spawn_player(mut commands: Commands, window: Query<&Window, With<PrimaryWindo
         },
         Player { can_shoot: true },
         Name::from("Player"),
-        // ShootTimer(Timer::from_seconds(duration, mode))
     ));
 }
 
